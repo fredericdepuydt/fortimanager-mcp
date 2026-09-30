@@ -576,6 +576,7 @@ async def get_package(
     name: str,
     adom: str | None = None,
     include_details: bool = False,
+    include_scope: bool | None = None,
 ) -> dict[str, Any]:
     """Get detailed information about a policy package.
 
@@ -583,6 +584,10 @@ async def get_package(
         name: Package name
         adom: ADOM name (default: from DEFAULT_ADOM env var, or "root")
         include_details: Include policies and settings (default: False)
+        include_scope: Include the "scope member" field listing which
+            FortiGates the package is assigned/installed to. FortiManager
+            omits this field unless explicitly requested. Defaults to the
+            POLICY_PACKAGE_INCLUDE_SCOPE config setting when not given.
 
     Returns:
         dict: Package details with keys:
@@ -596,7 +601,11 @@ async def get_package(
         name = validate_package_name(name)
         client = _get_client()
         loadsub = 1 if include_details else 0
-        package = await client.get_package(adom, name, loadsub=loadsub)
+        if include_scope is None:
+            include_scope = get_settings().POLICY_PACKAGE_INCLUDE_SCOPE
+        package = await client.get_package(
+            adom, name, loadsub=loadsub, include_scope=include_scope
+        )
         return {
             "status": "success",
             "package": package,

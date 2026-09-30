@@ -109,6 +109,61 @@ class TestPackageTools:
         assert result["count"] == 2
 
     @pytest.mark.asyncio
+    async def test_get_package_omits_scope_by_default(
+        self, mock_client_configured: FortiManagerClient, mock_fmg_instance: MagicMock
+    ) -> None:
+        """get_package should not request 'scope member' unless asked."""
+        from fortimanager_mcp.tools import system_tools
+
+        with patch.object(system_tools, "get_fmg_client", return_value=mock_client_configured):
+            result = await system_tools.get_package(name="default", adom="root")
+
+        assert result["status"] == "success"
+        _, kwargs = mock_fmg_instance.get.call_args
+        assert "option" not in kwargs
+
+    @pytest.mark.asyncio
+    async def test_get_package_include_scope_requests_option(
+        self, mock_client_configured: FortiManagerClient, mock_fmg_instance: MagicMock
+    ) -> None:
+        """include_scope=True should request the 'scope member' FMG option."""
+        from fortimanager_mcp.tools import system_tools
+
+        with patch.object(system_tools, "get_fmg_client", return_value=mock_client_configured):
+            result = await system_tools.get_package(
+                name="default", adom="root", include_scope=True
+            )
+
+        assert result["status"] == "success"
+        _, kwargs = mock_fmg_instance.get.call_args
+        assert kwargs.get("option") == ["scope member"]
+
+    @pytest.mark.asyncio
+    async def test_get_package_config_toggle_enables_scope(
+        self,
+        mock_client_configured: FortiManagerClient,
+        mock_fmg_instance: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """POLICY_PACKAGE_INCLUDE_SCOPE=true should enable scope retrieval
+        without passing include_scope explicitly."""
+        from fortimanager_mcp.tools import system_tools
+        from fortimanager_mcp.utils.config import get_settings
+
+        monkeypatch.setenv("FORTIMANAGER_HOST", "test.example.com")
+        monkeypatch.setenv("POLICY_PACKAGE_INCLUDE_SCOPE", "true")
+        get_settings.cache_clear()
+        try:
+            with patch.object(system_tools, "get_fmg_client", return_value=mock_client_configured):
+                result = await system_tools.get_package(name="default", adom="root")
+        finally:
+            get_settings.cache_clear()
+
+        assert result["status"] == "success"
+        _, kwargs = mock_fmg_instance.get.call_args
+        assert kwargs.get("option") == ["scope member"]
+
+    @pytest.mark.asyncio
     async def test_install_package_returns_task(
         self, mock_client_configured: FortiManagerClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:

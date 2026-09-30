@@ -1370,12 +1370,21 @@ class FortiManagerClient:
         adom: str,
         pkg: str,
         loadsub: int = 0,
+        include_scope: bool = False,
     ) -> dict[str, Any]:
         """Get policy package details.
 
         FNDN: GET /pm/pkg/adom/{adom}/{pkg}
+
+        Args:
+            include_scope: When True, request the "scope member" option so the
+                response includes which FortiGates the package is assigned to.
+                FortiManager omits this field unless explicitly asked for it.
         """
-        return await self.get(f"/pm/pkg/adom/{adom}/{pkg}", loadsub=loadsub)
+        kwargs: dict[str, Any] = {"loadsub": loadsub}
+        if include_scope:
+            kwargs["option"] = ["scope member"]
+        return await self.get(f"/pm/pkg/adom/{adom}/{pkg}", **kwargs)
 
     async def create_package(
         self,

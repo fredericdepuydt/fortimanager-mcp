@@ -210,6 +210,13 @@ DEFAULT_ADOM=root
 # Safety Guardrails (optional - strict by default)
 # FMG_SCRIPT_SAFETY=strict    # Block dangerous CLI commands in scripts (factory-reset, reboot, etc.)
 # FMG_POLICY_SAFETY=strict    # Block overly permissive policies (srcaddr=all + dstaddr=all + accept)
+
+# Policy package scope (optional - off by default)
+# When true, get_package includes the "scope member" field (the FortiGates
+# a policy package is assigned/installed to). FortiManager omits this field
+# unless requested; get_package's include_scope argument can also opt in
+# per-call regardless of this default.
+# POLICY_PACKAGE_INCLUDE_SCOPE=false
 ```
 
 ### Tool Loading Modes

@@ -161,6 +161,14 @@ class Settings(BaseSettings):
         "the process environment.",
     )
 
+    POLICY_PACKAGE_INCLUDE_SCOPE: bool = Field(
+        default=False,
+        description="Include the 'scope member' field (the FortiGates the policy package "
+        "is assigned/installed to) when retrieving policy package details via get_package. "
+        "Off by default since FortiManager omits it unless explicitly requested; enable for "
+        "environments that want assigned-device info in every package lookup.",
+    )
+
     # MCP Allowed Hosts (for reverse proxy / Docker deployments)
     MCP_ALLOWED_HOSTS: Annotated[list[str], NoDecode] = Field(
         default_factory=list,
